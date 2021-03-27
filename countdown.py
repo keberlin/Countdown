@@ -2,12 +2,22 @@ import argparse
 
 
 def oper(a, b):
+    # Perform an addition between the 2 numbers
     yield a[0] + b[0], f"({a[1]}+{b[1]})"
+    # Perform a subtraction between the 2 numbers
     if a[0] > b[0]:
         yield a[0] - b[0], f"({a[1]}-{b[1]})"
-    if b[0] and a[0] / b[0] == int(a[0] / b[0]):
-        yield a[0] // b[0], f"({a[1]}/{b[1]})"
+    # In both directions
+    if b[0] > a[0]:
+        yield b[0] - a[0], f"({b[1]}-{a[1]})"
+    # Perform a multiplication between the 2 numbers
     yield a[0] * b[0], f"({a[1]}*{b[1]})"
+    # Perform a division between the 2 numbers
+    if b[0] and a[0] % b[0] == 0:
+        yield a[0] // b[0], f"({a[1]}/{b[1]})"
+    # In both directions
+    if a[0] and b[0] % a[0] == 0:
+        yield b[0] // a[0], f"({b[1]}/{a[1]})"
 
 
 def inverse(idx, sub):
@@ -62,5 +72,5 @@ results = list(set(results))
 
 results.sort(key=lambda x: len(x))
 
-for result in results[:5]:
+for result in results:
     print(result)
