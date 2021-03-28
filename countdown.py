@@ -6,16 +6,12 @@ MULTIPLICATION = "*"
 DIVISION = "/"
 
 
-def oper_level(o):
-    if o == ADDITION or o == SUBTRACTION:
-        return 0
-    return 1
-
-
 class Perm:
     def __init__(
         self, total, count, number=None, left=None, right=None, operator=None,
     ):
+        assert number or (left and right and operator)
+
         self.total = total
         self.count = count
         self.number = number
@@ -23,15 +19,33 @@ class Perm:
         self.right = right
         self.operator = operator
 
+        if self.number:
+            self.expression = self.number
+        else:
+            self.expression = (
+                f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
+            )
+
+    def oper_level(self):
+        if self.operator in [ADDITION, SUBTRACTION]:
+            return 0
+        return 1
+
     def bracket(self, p):
-        if p.number or oper_level(self.operator) == oper_level(p.operator):
+        if p.number or self.oper_level() == p.oper_level():
             return str(p)
         return "(" + str(p) + ")"
 
     def __str__(self):
-        if self.number:
-            return self.number
-        return f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
+        return self.expression
+
+    def __hash__(self):
+        """Standard hash function for set awareness."""
+        return hash(self.expression)
+
+    def __eq__(self, other):
+        """Standard equals function for set awareness."""
+        return self.expression == other.expression
 
 
 def oper(a, b):
@@ -131,16 +145,18 @@ args = parser.parse_args()
 numbers = args.numbers
 total = args.total[0]
 
-results = []
-for p in perm(numbers):
-    if p.total == total:
-        results.append(p)
+results = list(filter(lambda x: x.total == total, perm(numbers)))
 
 # Remove duplicates
-# results = list(set(results))
+results = list(set(results))
 
 # Sort in order of how many numbers were used
 results.sort(key=lambda x: x.count)
 
+count = None
 for result in results:
+    if count is None:
+        count = result.count
+    elif result.count != count:
+        break
     print(result)
