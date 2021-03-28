@@ -19,13 +19,6 @@ class Perm:
         self.right = right
         self.operator = operator
 
-        if self.number:
-            self.expression = self.number
-        else:
-            self.expression = (
-                f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
-            )
-
     def oper_level(self):
         if self.operator in [ADDITION, SUBTRACTION]:
             return 0
@@ -37,15 +30,9 @@ class Perm:
         return "(" + str(p) + ")"
 
     def __str__(self):
-        return self.expression
-
-    def __hash__(self):
-        """Standard hash function for set awareness."""
-        return hash(self.expression)
-
-    def __eq__(self, other):
-        """Standard equals function for set awareness."""
-        return self.expression == other.expression
+        if self.number:
+            return self.number
+        return f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
 
 
 def oper(a, b):
@@ -147,16 +134,10 @@ total = args.total[0]
 
 results = list(filter(lambda x: x.total == total, perm(numbers)))
 
-# Remove duplicates
-results = list(set(results))
-
 # Sort in order of how many numbers were used
 results.sort(key=lambda x: x.count)
 
-count = None
-for result in results:
-    if count is None:
-        count = result.count
-    elif result.count != count:
-        break
-    print(result)
+if results:
+    print(results[0])
+else:
+    print("No exact solutions found.")
