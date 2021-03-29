@@ -1,20 +1,29 @@
 import argparse
 
+from utils import elems, indexes
+
 ADDITION = "+"
 SUBTRACTION = "-"
 MULTIPLICATION = "*"
 DIVISION = "/"
 
 
-class Perm:
-    def __init__(
-        self, total, count, number=None, left=None, right=None, operator=None,
-    ):
-        assert number or (left and right and operator)
+class Number:
+    def __init__(self, number):
+        self.total = number
+        self.count = 1
+        self.number = str(number)
 
+    def __str__(self):
+        return self.number
+
+
+class Product:
+    def __init__(
+        self, total, count, left, right, operator,
+    ):
         self.total = total
         self.count = count
-        self.number = number
         self.left = left
         self.right = right
         self.operator = operator
@@ -25,19 +34,17 @@ class Perm:
         return 1
 
     def bracket(self, p):
-        if p.number or self.oper_level() == p.oper_level():
+        if isinstance(p, Number) or self.oper_level() == p.oper_level():
             return str(p)
         return "(" + str(p) + ")"
 
     def __str__(self):
-        if self.number:
-            return self.number
         return f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
 
 
 def oper(a, b):
     # Perform an addition between the 2 numbers
-    yield Perm(
+    yield Product(
         total=a.total + b.total,
         count=a.count + b.count,
         left=a,
@@ -46,7 +53,7 @@ def oper(a, b):
     )
     # Perform a subtraction between the 2 numbers
     if a.total > b.total:
-        yield Perm(
+        yield Product(
             total=a.total - b.total,
             count=a.count + b.count,
             left=a,
@@ -55,7 +62,7 @@ def oper(a, b):
         )
     # In both directions
     if b.total > a.total:
-        yield Perm(
+        yield Product(
             total=b.total - a.total,
             count=a.count + b.count,
             left=b,
@@ -63,7 +70,7 @@ def oper(a, b):
             operator=SUBTRACTION,
         )
     # Perform a multiplication between the 2 numbers
-    yield Perm(
+    yield Product(
         total=a.total * b.total,
         count=a.count + b.count,
         left=a,
@@ -72,7 +79,7 @@ def oper(a, b):
     )
     # Perform a division between the 2 numbers
     if b.total and a.total % b.total == 0:
-        yield Perm(
+        yield Product(
             total=a.total // b.total,
             count=a.count + b.count,
             left=a,
@@ -81,7 +88,7 @@ def oper(a, b):
         )
     # In both directions
     if a.total and b.total % a.total == 0:
-        yield Perm(
+        yield Product(
             total=b.total // a.total,
             count=a.count + b.count,
             left=b,
@@ -90,30 +97,13 @@ def oper(a, b):
         )
 
 
-def inverse(idx, sub):
-    return list(set(idx) - set(sub))
-
-
-def indexes(idx, n):
-    for i in idx:
-        idx1 = [i]
-        if n > 1:
-            for idx2, idx3 in indexes(inverse(idx, idx1), n - 1):
-                yield idx1 + idx2, idx3
-        else:
-            yield idx1, inverse(idx, idx1)
-
-
-def elems(numbers, idx):
-    return [numbers[i] for i in idx]
-
-
 def perm(numbers):
     for n in numbers:
-        yield Perm(total=n, count=1, number=str(n))
+        yield Number(n)
 
+    array = list(range(len(numbers)))
     for n in range(len(numbers) // 2):
-        for idx1, idx2 in indexes(range(len(numbers)), n + 1):
+        for idx1, idx2 in indexes(array, n + 1):
             for a in perm(elems(numbers, idx1)):
                 for b in perm(elems(numbers, idx2)):
                     for p in oper(a, b):
@@ -121,13 +111,13 @@ def perm(numbers):
 
 
 parser = argparse.ArgumentParser(
-    description="Utility to solve the Countdown numbers games."
+    description="Utility to solve the Countdown numbers game."
 )
 parser.add_argument(dest="numbers", type=int, nargs=6, help="Numbers")
 parser.add_argument(dest="total", type=int, nargs=1, help="Total")
 args = parser.parse_args()
 
-# 6 numbers results in 8286173 permutations
+# 6 numbers results in 8,286,173 permutations
 
 numbers = args.numbers
 total = args.total[0]
