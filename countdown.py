@@ -8,98 +8,80 @@ MULTIPLICATION = "*"
 DIVISION = "/"
 
 
-class Number:
-    def __init__(self, number):
-        self.total = number
-        self.count = 1
-        self.number = str(number)
-
-    def __str__(self):
-        return self.number
+def oper_level(operand):
+    if operand[4] in [ADDITION, SUBTRACTION]:
+        return 0
+    return 1
 
 
-class Product:
-    def __init__(
-        self, total, count, left, right, operator,
-    ):
-        self.total = total
-        self.count = count
-        self.left = left
-        self.right = right
-        self.operator = operator
+def bracket(operand, other):
+    if other[2] is None or oper_level(operand) == oper_level(other):
+        return str(other[0])
+    return "(" + format(other) + ")"
 
-    def oper_level(self):
-        if self.operator in [ADDITION, SUBTRACTION]:
-            return 0
-        return 1
 
-    def bracket(self, p):
-        if isinstance(p, Number) or self.oper_level() == p.oper_level():
-            return str(p)
-        return "(" + str(p) + ")"
-
-    def __str__(self):
-        return f"{self.bracket(self.left)} {self.operator} {self.bracket(self.right)}"
+def format(operand):
+    return f"{bracket(operand,operand[2])} {operand[4]} {bracket(operand,operand[3])}"
 
 
 def oper(a, b):
     # Perform an addition between the 2 numbers
-    yield Product(
-        total=a.total + b.total,
-        count=a.count + b.count,
-        left=a,
-        right=b,
-        operator=ADDITION,
+    yield (
+        a[0] + b[0],
+        a[1] + b[1],
+        a,
+        b,
+        ADDITION,
     )
     # Perform a subtraction between the 2 numbers
-    if a.total > b.total:
-        yield Product(
-            total=a.total - b.total,
-            count=a.count + b.count,
-            left=a,
-            right=b,
-            operator=SUBTRACTION,
+    if a[0] > b[0]:
+        yield (
+            a[0] - b[0],
+            a[1] + b[1],
+            a,
+            b,
+            SUBTRACTION,
         )
     # In both directions
-    if b.total > a.total:
-        yield Product(
-            total=b.total - a.total,
-            count=a.count + b.count,
-            left=b,
-            right=a,
-            operator=SUBTRACTION,
+    if b[0] > a[0]:
+        yield (
+            b[0] - a[0],
+            a[1] + b[1],
+            b,
+            a,
+            SUBTRACTION,
         )
     # Perform a multiplication between the 2 numbers
-    yield Product(
-        total=a.total * b.total,
-        count=a.count + b.count,
-        left=a,
-        right=b,
-        operator=MULTIPLICATION,
+    yield (
+        a[0] * b[0],
+        a[1] + b[1],
+        a,
+        b,
+        MULTIPLICATION,
     )
     # Perform a division between the 2 numbers
-    if b.total and a.total % b.total == 0:
-        yield Product(
-            total=a.total // b.total,
-            count=a.count + b.count,
-            left=a,
-            right=b,
-            operator=DIVISION,
+    if b[0] and a[0] % b[0] == 0:
+        yield (
+            a[0] // b[0],
+            a[1] + b[1],
+            a,
+            b,
+            DIVISION,
         )
     # In both directions
-    if a.total and b.total % a.total == 0:
-        yield Product(
-            total=b.total // a.total,
-            count=a.count + b.count,
-            left=b,
-            right=a,
-            operator=DIVISION,
+    if a[0] and b[0] % a[0] == 0:
+        yield (
+            b[0] // a[0],
+            a[1] + b[1],
+            b,
+            a,
+            DIVISION,
         )
 
 
 def perm(numbers):
     for n in numbers:
-        yield Number(n)
+        yield (n, 1, None, None, None)
 
     array = list(range(len(numbers)))
     for n in range(len(numbers) // 2):
@@ -110,9 +92,7 @@ def perm(numbers):
                         yield p
 
 
-parser = argparse.ArgumentParser(
-    description="Utility to solve the Countdown numbers game."
-)
+parser = argparse.ArgumentParser(description="Utility to solve the Countdown numbers game.")
 parser.add_argument(dest="numbers", type=int, nargs=6, help="Numbers")
 parser.add_argument(dest="total", type=int, nargs=1, help="Total")
 args = parser.parse_args()
@@ -122,12 +102,12 @@ args = parser.parse_args()
 numbers = args.numbers
 total = args.total[0]
 
-results = list(filter(lambda x: x.total == total, perm(numbers)))
+results = list(filter(lambda x: x[0] == total, perm(numbers)))
 
 # Sort in order of how many numbers were used
-results.sort(key=lambda x: x.count)
+results.sort(key=lambda x: x[1])
 
 if results:
-    print(results[0])
+    print(format(results[0]))
 else:
     print("No exact solutions found.")
