@@ -8,19 +8,21 @@ MULTIPLICATION = "*"
 DIVISION = "/"
 
 
-def oper_level(operand):
-    if operand[4] in [ADDITION, SUBTRACTION]:
+def oper_level(operator):
+    if operator in [ADDITION, SUBTRACTION]:
         return 0
     return 1
 
 
 def bracket(operand, other):
-    if other[2] is None or oper_level(operand) == oper_level(other):
-        return str(other[0])
+    if other[2] is None or oper_level(operand[4]) == oper_level(other[4]):
+        return format(other)
     return "(" + format(other) + ")"
 
 
 def format(operand):
+    if operand[2] is None:
+        return str(operand[0])
     return f"{bracket(operand,operand[2])} {operand[4]} {bracket(operand,operand[3])}"
 
 
@@ -46,7 +48,7 @@ def oper(a, b):
     if b[0] > a[0]:
         yield (
             b[0] - a[0],
-            a[1] + b[1],
+            b[1] + a[1],
             b,
             a,
             SUBTRACTION,
@@ -72,7 +74,7 @@ def oper(a, b):
     if a[0] and b[0] % a[0] == 0:
         yield (
             b[0] // a[0],
-            a[1] + b[1],
+            b[1] + a[1],
             b,
             a,
             DIVISION,
